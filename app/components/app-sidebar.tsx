@@ -86,7 +86,7 @@ export function AppSidebar() {
             <CreditCard className="h-4 w-4" />
           </div>
           <div className="flex flex-col">
-            <span className="text-lg font-semibold">MaxiPet</span>
+            <span className="text-lg font-semibold">Kuchaski</span>
             <span className="text-xs text-muted-foreground">Panel Admin</span>
           </div>
         </div>

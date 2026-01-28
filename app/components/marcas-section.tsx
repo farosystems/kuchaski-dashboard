@@ -346,7 +346,7 @@ export function MarcasSection({ marcas, onCreateMarca, onUpdateMarca, onDeleteMa
                 {uploadMethod === 'url' && (
                   <div className="space-y-2">
                     <Input
-                      placeholder="https://ejemplo.com/logo.png"
+                      placeholder="https://ejemplo.com/logo1.png"
                       value={formData.logo}
                       onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
                       disabled={isUploading}

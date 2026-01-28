@@ -315,7 +315,7 @@ function Dashboard() {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="#dashboard">MaxiPet Admin</BreadcrumbLink>
+                <BreadcrumbLink href="#dashboard">Kuchaski Admin</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem>

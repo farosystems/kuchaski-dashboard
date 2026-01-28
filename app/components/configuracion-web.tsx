@@ -222,7 +222,7 @@ export function ConfiguracionWebComponent({
                         id="logo_url"
                         value={formData.logo_url}
                         onChange={(e) => handleInputChange('logo_url', e.target.value)}
-                        placeholder="https://ejemplo.com/logo.png o subir desde PC"
+                        placeholder="https://ejemplo.com/logo1.png o subir desde PC"
                       />
                     </div>
                   </div>
