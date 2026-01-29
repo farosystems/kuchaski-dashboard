@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { Categoria, Linea } from "@/lib/supabase"
+import { ImportCategoriasDialog } from "./import-categorias-dialog"
 
 interface CategoriasSectionProps {
   categorias: Categoria[]
@@ -95,18 +96,20 @@ export function CategoriasSection({ categorias, lineas, onCreateCategoria, onUpd
       <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Gestión de Categorías</CardTitle>
-        <Dialog open={isDialogOpen} onOpenChange={(open) => {
-          if (open) {
-            setIsDialogOpen(true)
-          }
-          // No permitir cerrar con clic fuera o ESC
-        }}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nueva Categoría
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <ImportCategoriasDialog lineas={lineas} onCreateCategoria={onCreateCategoria} />
+          <Dialog open={isDialogOpen} onOpenChange={(open) => {
+            if (open) {
+              setIsDialogOpen(true)
+            }
+            // No permitir cerrar con clic fuera o ESC
+          }}>
+            <DialogTrigger asChild>
+              <Button onClick={resetForm}>
+                <Plus className="h-4 w-4 mr-2" />
+                Nueva Categoría
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-md" showCloseButton={false}>
             <DialogHeader>
               <DialogTitle>{editingCategoria ? "Editar Categoría" : "Nueva Categoría"}</DialogTitle>
@@ -159,7 +162,8 @@ export function CategoriasSection({ categorias, lineas, onCreateCategoria, onUpd
               </Button>
             </form>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </CardHeader>
       <CardContent>
         <Table>

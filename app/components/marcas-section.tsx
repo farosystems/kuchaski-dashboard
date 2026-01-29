@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import type { Marca } from "@/lib/supabase"
 import { supabase } from "@/lib/supabase"
+import { ImportMarcasDialog } from "./import-marcas-dialog"
 
 interface MarcasSectionProps {
   marcas: Marca[]
@@ -220,18 +221,20 @@ export function MarcasSection({ marcas, onCreateMarca, onUpdateMarca, onDeleteMa
       <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Gestión de Marcas</CardTitle>
-        <Dialog open={isDialogOpen} onOpenChange={(open) => {
-          if (open) {
-            setIsDialogOpen(true)
-          }
-          // No permitir cerrar con clic fuera o ESC
-        }}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nueva Marca
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <ImportMarcasDialog onCreateMarca={onCreateMarca} />
+          <Dialog open={isDialogOpen} onOpenChange={(open) => {
+            if (open) {
+              setIsDialogOpen(true)
+            }
+            // No permitir cerrar con clic fuera o ESC
+          }}>
+            <DialogTrigger asChild>
+              <Button onClick={resetForm}>
+                <Plus className="h-4 w-4 mr-2" />
+                Nueva Marca
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-md" showCloseButton={false}>
             <DialogHeader>
               <DialogTitle>{editingMarca ? "Editar Marca" : "Nueva Marca"}</DialogTitle>
@@ -363,7 +366,8 @@ export function MarcasSection({ marcas, onCreateMarca, onUpdateMarca, onDeleteMa
               </Button>
             </form>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </CardHeader>
       <CardContent>
         <Table>

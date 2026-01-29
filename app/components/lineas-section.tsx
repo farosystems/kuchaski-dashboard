@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import type { Linea } from "@/lib/supabase"
+import { ImportLineasDialog } from "./import-lineas-dialog"
 
 interface LineasSectionProps {
   lineas: Linea[]
@@ -89,18 +90,20 @@ export function LineasSection({ lineas, onCreateLinea, onUpdateLinea, onDeleteLi
       <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Gestión de Líneas</CardTitle>
-        <Dialog open={isDialogOpen} onOpenChange={(open) => {
-          if (open) {
-            setIsDialogOpen(true)
-          }
-          // No permitir cerrar con clic fuera o ESC
-        }}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nueva Línea
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <ImportLineasDialog onCreateLinea={onCreateLinea} />
+          <Dialog open={isDialogOpen} onOpenChange={(open) => {
+            if (open) {
+              setIsDialogOpen(true)
+            }
+            // No permitir cerrar con clic fuera o ESC
+          }}>
+            <DialogTrigger asChild>
+              <Button onClick={resetForm}>
+                <Plus className="h-4 w-4 mr-2" />
+                Nueva Línea
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-md" showCloseButton={false}>
             <DialogHeader>
               <DialogTitle>{editingLinea ? "Editar Línea" : "Nueva Línea"}</DialogTitle>
@@ -131,7 +134,8 @@ export function LineasSection({ lineas, onCreateLinea, onUpdateLinea, onDeleteLi
               </Button>
             </form>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </CardHeader>
       <CardContent>
         <Table>
