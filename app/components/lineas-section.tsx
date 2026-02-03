@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { Plus, Edit, Trash2 } from "lucide-react"
+import { Plus, Edit, Trash2, Upload, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import type { Linea } from "@/lib/supabase"
+import { supabase } from "@/lib/supabase"
 import { ImportLineasDialog } from "./import-lineas-dialog"
 
 interface LineasSectionProps {
@@ -27,11 +28,14 @@ export function LineasSection({ lineas, onCreateLinea, onUpdateLinea, onDeleteLi
   const [editingLinea, setEditingLinea] = useState<Linea | null>(null)
   const [formData, setFormData] = useState({
     descripcion: "",
+    imagen: "",
   })
+  const [isUploading, setIsUploading] = useState(false)
 
   const resetForm = () => {
     setFormData({
       descripcion: "",
+      imagen: "",
     })
     setEditingLinea(null)
   }
@@ -39,15 +43,17 @@ export function LineasSection({ lineas, onCreateLinea, onUpdateLinea, onDeleteLi
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    const lineaData = {
-      descripcion: formData.descripcion,
-    }
-
     try {
       if (editingLinea) {
-        await onUpdateLinea(editingLinea.id, lineaData)
+        await onUpdateLinea(editingLinea.id, {
+          descripcion: formData.descripcion,
+          imagen: formData.imagen || null,
+        })
       } else {
-        await onCreateLinea(lineaData)
+        await onCreateLinea({
+          descripcion: formData.descripcion,
+          imagen: formData.imagen || undefined,
+        })
       }
       setIsDialogOpen(false)
       resetForm()
@@ -60,6 +66,7 @@ export function LineasSection({ lineas, onCreateLinea, onUpdateLinea, onDeleteLi
     setEditingLinea(linea)
     setFormData({
       descripcion: linea.descripcion,
+      imagen: linea.imagen || "",
     })
     setIsDialogOpen(true)
   }
@@ -69,9 +76,27 @@ export function LineasSection({ lineas, onCreateLinea, onUpdateLinea, onDeleteLi
     setIsDeleteDialogOpen(true)
   }
 
+  const removeImageFromStorage = async (imageUrl: string) => {
+    if (!imageUrl || !imageUrl.includes('supabase.co')) return
+    try {
+      const url = new URL(imageUrl)
+      const pathParts = url.pathname.split('/')
+      const imagenesIndex = pathParts.findIndex(part => part === 'imagenes')
+      if (imagenesIndex !== -1 && imagenesIndex + 2 < pathParts.length) {
+        const filePath = pathParts.slice(imagenesIndex + 1).join('/')
+        await supabase.storage.from('imagenes').remove([filePath])
+      }
+    } catch (error) {
+      console.error('Error al eliminar imagen del storage:', error)
+    }
+  }
+
   const handleDeleteConfirm = async () => {
     if (!lineaToDelete) return
     try {
+      if (lineaToDelete.imagen) {
+        await removeImageFromStorage(lineaToDelete.imagen)
+      }
       await onDeleteLinea(lineaToDelete.id)
       setIsDeleteDialogOpen(false)
       setLineaToDelete(null)
@@ -83,6 +108,52 @@ export function LineasSection({ lineas, onCreateLinea, onUpdateLinea, onDeleteLi
   const handleDeleteCancel = () => {
     setIsDeleteDialogOpen(false)
     setLineaToDelete(null)
+  }
+
+  const uploadImagen = async (file: File): Promise<string | null> => {
+    if (!file.type.startsWith('image/')) {
+      throw new Error('Solo se permiten archivos de imagen')
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      throw new Error('El archivo es demasiado grande. Máximo 2MB')
+    }
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
+    const filePath = `lineas/${fileName}`
+
+    const { error } = await supabase.storage
+      .from('imagenes')
+      .upload(filePath, file, { cacheControl: '3600', upsert: false })
+
+    if (error) throw error
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('imagenes')
+      .getPublicUrl(filePath)
+
+    return publicUrl
+  }
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setIsUploading(true)
+    try {
+      const url = await uploadImagen(file)
+      if (url) setFormData({ ...formData, imagen: url })
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Error al subir imagen')
+    } finally {
+      setIsUploading(false)
+      e.target.value = ''
+    }
+  }
+
+  const handleRemoveImagen = async () => {
+    if (formData.imagen) {
+      await removeImageFromStorage(formData.imagen)
+    }
+    setFormData({ ...formData, imagen: '' })
   }
 
   return (
@@ -129,8 +200,66 @@ export function LineasSection({ lineas, onCreateLinea, onUpdateLinea, onDeleteLi
                   required
                 />
               </div>
-              <Button type="submit" className="w-full">
-                {editingLinea ? "Actualizar" : "Crear"} Línea
+
+              <div className="space-y-3">
+                <Label>Imagen de la Línea</Label>
+
+                {/* Vista previa */}
+                {formData.imagen && (
+                  <div className="relative">
+                    <div className="w-32 h-32 border rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center">
+                      <img
+                        src={formData.imagen}
+                        alt="Imagen preview"
+                        className="max-w-full max-h-full object-contain"
+                        onError={(e) => { e.currentTarget.src = '/placeholder.jpg' }}
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="absolute -top-2 -right-2 h-6 w-6 p-0"
+                      onClick={handleRemoveImagen}
+                      title="Eliminar imagen"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
+
+                {/* Subida de archivo */}
+                <div className="space-y-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="imagen-linea-upload"
+                    disabled={isUploading}
+                  />
+                  <label htmlFor="imagen-linea-upload" className="cursor-pointer">
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors">
+                      <div className="flex flex-col items-center space-y-2">
+                        {isUploading ? (
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                        ) : (
+                          <Upload className="h-6 w-6 text-gray-400" />
+                        )}
+                        <p className="text-sm font-medium text-gray-700">
+                          {isUploading ? 'Subiendo...' : 'Haz clic para seleccionar imagen'}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          PNG, JPG, GIF hasta 2MB
+                        </p>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <Button type="submit" className="w-full" disabled={isUploading}>
+                {isUploading ? "Procesando..." : editingLinea ? "Actualizar" : "Crear"} Línea
               </Button>
             </form>
           </DialogContent>
@@ -142,6 +271,7 @@ export function LineasSection({ lineas, onCreateLinea, onUpdateLinea, onDeleteLi
           <TableHeader>
             <TableRow>
               <TableHead>ID</TableHead>
+              <TableHead>Imagen</TableHead>
               <TableHead>Descripción</TableHead>
               <TableHead>Fecha de Creación</TableHead>
               <TableHead>Acciones</TableHead>
@@ -151,6 +281,15 @@ export function LineasSection({ lineas, onCreateLinea, onUpdateLinea, onDeleteLi
             {lineas.map((linea) => (
               <TableRow key={linea.id}>
                 <TableCell>{linea.id}</TableCell>
+                <TableCell>
+                  {linea.imagen ? (
+                    <div className="w-10 h-10 border rounded overflow-hidden bg-gray-50">
+                      <img src={linea.imagen} alt={linea.descripcion} className="w-full h-full object-contain" />
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-400">Sin imagen</span>
+                  )}
+                </TableCell>
                 <TableCell className="font-medium">{linea.descripcion}</TableCell>
                 <TableCell>{new Date(linea.created_at).toLocaleDateString('es-AR')}</TableCell>
                 <TableCell>

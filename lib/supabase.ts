@@ -9,6 +9,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 export interface Linea {
   id: number
   descripcion: string
+  imagen?: string | null
   created_at: string
 }
 
