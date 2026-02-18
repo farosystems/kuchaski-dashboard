@@ -1745,13 +1745,16 @@ export const ProductosSection = React.memo(({
                     </span>
                   </TableCell>
                       <TableCell>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs ${
-                            producto.activo ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {producto.activo ? "Activo" : "Inactivo"}
-                        </span>
+                        <Switch
+                          checked={producto.activo ?? true}
+                          onCheckedChange={async (checked) => {
+                            try {
+                              await onUpdateProducto(producto.id, { activo: checked })
+                            } catch (error) {
+                              console.error('Error al actualizar activo:', error)
+                            }
+                          }}
+                        />
                       </TableCell>
                       <TableCell>
                         <Switch
@@ -1923,6 +1926,20 @@ export const ProductosSection = React.memo(({
                             await onUpdateProducto(producto.id, { tiene_stock: checked })
                           } catch (error) {
                             console.error('Error al actualizar stock:', error)
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-xs text-gray-600">Activo:</span>
+                      <Switch
+                        size="sm"
+                        checked={producto.activo ?? true}
+                        onCheckedChange={async (checked) => {
+                          try {
+                            await onUpdateProducto(producto.id, { activo: checked })
+                          } catch (error) {
+                            console.error('Error al actualizar activo:', error)
                           }
                         }}
                       />
