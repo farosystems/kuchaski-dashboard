@@ -124,7 +124,12 @@ export function PromosSection() {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
+    // Extraer solo la parte de fecha (YYYY-MM-DD) sin conversión de zona horaria
+    const datePart = dateString.split('T')[0]
+    const [year, month, day] = datePart.split('-')
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
+
+    return date.toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
@@ -134,8 +139,13 @@ export function PromosSection() {
   const isPromoActive = (promo: Promo) => {
     if (!promo.activa) return false
     const now = new Date()
-    const inicio = new Date(promo.fecha_inicio)
-    const fin = new Date(promo.fecha_fin)
+    // Parsear fechas sin conversión de zona horaria
+    const inicioPart = promo.fecha_inicio.split('T')[0]
+    const finPart = promo.fecha_fin.split('T')[0]
+    const [yi, mi, di] = inicioPart.split('-').map(Number)
+    const [yf, mf, df] = finPart.split('-').map(Number)
+    const inicio = new Date(yi, mi - 1, di)
+    const fin = new Date(yf, mf - 1, df, 23, 59, 59)
     return now >= inicio && now <= fin
   }
 

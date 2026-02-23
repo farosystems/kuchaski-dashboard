@@ -125,8 +125,8 @@ export function PromoModal({ open, onOpenChange, promo, onSuccess }: PromoModalP
         nombre: formData.nombre,
         descripcion: formData.descripcion,
         descuento_porcentaje: parseFloat(formData.descuento_porcentaje),
-        fecha_inicio: new Date(formData.fecha_inicio).toISOString(),
-        fecha_fin: new Date(formData.fecha_fin).toISOString(),
+        fecha_inicio: `${formData.fecha_inicio}T00:00:00`,
+        fecha_fin: `${formData.fecha_fin}T23:59:59`,
         activa: formData.activa
       }
 
